@@ -85,13 +85,11 @@ void HttpServerAdvanced::loop()
   HttpRequest request(&statusLed);
   request.readClient(&client);
 
-  String response = processRequest(&request);
+  HttpResponse response = processRequest(&request);
 
   client.flush();
 
-  response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n" + response;
-
-  client.print(response);
+  client.print(response.toString());
   delay(1);
 }
 
@@ -113,19 +111,31 @@ void HttpServerAdvanced::waitForClient(WiFiClient* client)
   }
 }
 
-String HttpServerAdvanced::processRequest(HttpRequest* request)
+/**
+ * Processes the request and returns accodringly
+ * If the endpoint cannot be found, returns 404
+ * If the endpoint can be found, but the parameters
+ * or method is not supported, returns 400
+ * If the endpoint can be found, and the parameters are good,
+ * but the operation failed the validation, returns 406
+ * @param  request The request to process
+ * @return         HttpResponse
+ */
+HttpResponse HttpServerAdvanced::processRequest(HttpRequest* request)
 {
   //serial
   if (request->uri == "/serial") {
     if (request->method == "get") {
-      return readSerial();
+      return HttpResponse(
+        readSerial()
+      );
     }
     if (request->method == "post") {
       writeSerial(request->data);
-      return "";
+      return HttpResponse();
     }
 
-    return "";
+    return HttpResponse::BadRequest();
   }
 
   //digital/{pinNumber}
@@ -133,21 +143,33 @@ String HttpServerAdvanced::processRequest(HttpRequest* request)
     String strPinNumber = request->uri.substring(9);
 
     if (request->method == "get") {
-      return String(getPinState(strPinNumber));
+      return HttpResponse(
+        String(
+          getPinState(strPinNumber)
+        )
+      );
     }
 
     if (request->method == "post") {
-      setPinState(strPinNumber, request->data);
-      return "";
+      if (setPinState(strPinNumber, request->data)) {
+        return HttpResponse();
+      }
+
+      return HttpResponse::Unacceptable();
     }
 
     if (request->method == "put") {
-      initPin(strPinNumber, request->data);
-      return "";
+      if (initPin(strPinNumber, request->data)) {
+        return HttpResponse();
+      }
+
+      return HttpResponse::Unacceptable();
     }
 
-    return "";
+    return HttpResponse::BadRequest();
   }
+
+  return HttpResponse::NotFound();
 }
 
 byte HttpServerAdvanced::convertPin(String strPinNumber)
@@ -196,16 +218,16 @@ byte HttpServerAdvanced::getPinState(String strPinNumber)
   return eeData.getPinState(pinNumber);
 }
 
-void HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
+bool HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
 {
   byte pinNumber = convertPin(strPinNumber);
   if (pinNumber < 0) {
-    return;
+    return false;
   }
 
   // if the pin is in input mode, bail
   if (isPinInput(pinNumber)) {
-    return;
+    return false;
   }
 
   int state = -1;
@@ -218,18 +240,19 @@ void HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
   }
 
   if (state < 0) {
-    return;
+    return false;
   }
 
   digitalWrite(pinNumber, state);
   eeData.storePinState(pinNumber, state);
+  return true;
 }
 
-void HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
+bool HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
 {
   int pinNumber = convertPin(strPinNumber);
   if (pinNumber < 0) {
-    return;
+    return false;
   }
 
   int mode = -1;
@@ -243,11 +266,12 @@ void HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
     mode = INPUT_PULLUP;
   }
   else {
-    return;
+    return false;
   }
 
   pinMode(pinNumber, mode);
   eeData.storePinMode(pinNumber, mode);
+  return true;
 }
 
 bool HttpServerAdvanced::isPinInput(byte pinNumber)

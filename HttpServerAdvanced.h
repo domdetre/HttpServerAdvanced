@@ -5,6 +5,7 @@
 #include <Arduino.h>
 
 #include "HttpRequest.h"
+#include "HttpResponse.h"
 #include "StatusLed.h"
 #include "EepromData.h"
 
@@ -27,15 +28,15 @@ class HttpServerAdvanced
     void loop();
 
     void waitForClient(WiFiClient* client);
-    String processRequest(HttpRequest* request);
+    HttpResponse processRequest(HttpRequest* request);
 
     String readSerial();
     void writeSerial(String data);
 
     byte convertPin(String strPinNumber);
     byte getPinState(String strPinNumber);
-    void setPinState(String strPinNumber, String strPinState);
-    void initPin(String strPinNumber, String strPinMode);
+    bool setPinState(String strPinNumber, String strPinState);
+    bool initPin(String strPinNumber, String strPinMode);
     bool isPinInput(byte pinNumber);
     bool isPinOutput(byte pinNumber);
     void restorePinModesAndStates();

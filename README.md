@@ -15,7 +15,7 @@
   If the pin is initialized as input, then will return the state of the pin.
   If the pin is initialized as output, then will return the stored state of the pin.
 
-- POST /digital/{pinNumber}  
+- POST /digital/{pinNumber}  --data {0|1|low|high}
   If the pin is initialized as input, then nothing will happen.  
   If the pin is initialized as output, then set the state.  
 
@@ -53,5 +53,5 @@
 ## Compile size results
 
 - Wemos D1 R1  
-  Sketch uses 264800 bytes (25%) of program storage space. Maximum is 1044464 bytes.  
-  Global variables use 29204 bytes (35%) of dynamic memory, leaving 52716 bytes for local variables. Maximum is 81920 bytes.  
+  Sketch uses 265648 bytes (25%) of program storage space. Maximum is 1044464 bytes.  
+  Global variables use 29236 bytes (35%) of dynamic memory, leaving 52684 bytes for local variables. Maximum is 81920 bytes.  
