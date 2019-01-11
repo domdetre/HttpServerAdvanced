@@ -1,23 +1,23 @@
 #include "HttpServerAdvanced.h"
 
-HttpServerAdvanced::HttpServerAdvanced(const char* ssid, const char* sskey, int port, int ledPin)
+HttpServerAdvanced::HttpServerAdvanced(const char* ssid, const char* sskey, int port, int ledPinNumber)
 {
-  init(ssid, sskey, port, ledPin);
+  init(ssid, sskey, port, ledPinNumber);
 }
 
-void HttpServerAdvanced::init(const char* ssid, const char* sskey, int port, int ledPin)
+void HttpServerAdvanced::init(const char* ssid, const char* sskey, int port, int ledPinNumber)
 {
   this->ssid = ssid;
   this->sskey = sskey;
   this->port = port;
-  this->ledPin = ledPin;
+  this->statusLed.ledPinNumber = ledPinNumber;
 
   this->server = new WiFiServer(port);
 }
 
-void HttpServerAdvanced::setup(const char* ssid, const char* sskey, int port, int ledPin)
+void HttpServerAdvanced::setup(const char* ssid, const char* sskey, int port, int ledPinNumber)
 {
-  init(ssid, sskey, port, ledPin);
+  init(ssid, sskey, port, ledPinNumber);
   setup();
 }
 
@@ -30,10 +30,7 @@ void HttpServerAdvanced::setup()
 
   delay(10);
 
-  if (ledPin >= 0) {
-    pinMode(ledPin, OUTPUT);
-    turnOnLed();
-  }
+  statusLed.setup();
 
   if (debug) {
     Serial.print("Connecting to " + String(ssid));
@@ -45,15 +42,12 @@ void HttpServerAdvanced::setup()
   while (WiFi.status() != WL_CONNECTED) {
     delay(250);
 
-    if (ledPin >= 0) {
-      turnOffLed();
-    }
+    statusLed.turnOff();
 
     delay(250);
 
-    if (ledPin >= 0) {
-      turnOnLed();
-    }
+    statusLed.turnOn();
+
 
     if (debug) {
       Serial.print(".");
@@ -81,11 +75,12 @@ void HttpServerAdvanced::loop()
     return;
   }
 
-  waitForClient(client);
+  waitForClient(&client);
 
-  readClient(client);
+  HttpRequest request(&statusLed);
+  request.readClient(&client);
 
-  String response = processRequest();
+  String response = processRequest(&request);
 
   client.flush();
 
@@ -95,84 +90,33 @@ void HttpServerAdvanced::loop()
   delay(1);
 }
 
-void HttpServerAdvanced::waitForClient(WiFiClient client)
+void HttpServerAdvanced::waitForClient(WiFiClient* client)
 {
   int counter = 0;
-  while (!client.available()) {
+  while (!client->available()) {
     delay(1);
     counter++;
 
     if (counter > 250) {
-      if (ledPin >= 0) {
-        turnOffLed();
-      }
+      statusLed.turnOff();
     }
 
     if (counter > 500) {
-      if (ledPin >= 0) {
-        turnOnLed();
-      }
-
+      statusLed.turnOn();
       counter = 0;
     }
   }
 }
 
-void HttpServerAdvanced::readClient(WiFiClient client)
-{
-  String request = "";
-  while (client.available()) {
-    request += char(client.read());
-  }
-
-  request.toLowerCase();
-
-  int delimIndex = request.indexOf(' ');
-  method = request.substring(delimIndex);
-  request.remove(0, delimIndex + 1);
-
-  delimIndex = request.indexOf(' ');
-  uri = request.substring(delimIndex);
-  request.remove(0, delimIndex + 1);
-
-  delimIndex = request.indexOf('\n');
-  String protocoll = request.substring(delimIndex);
-  request.remove(0, delimIndex + 1);
-
-  delimIndex = request.indexOf("\r\n\r\n");
-  String headers = request.substring(delimIndex);
-  data = request.substring(delimIndex + 4);
-}
-
-String HttpServerAdvanced::sendToSerial()
-{
-  Serial.println(method + ' ' + uri);
-  if (Serial.available()) {
-    return Serial.readStringUntil('\n');
-  }
-
-  return String();
-}
-
-void HttpServerAdvanced::turnOnLed()
-{
-  digitalWrite(ledPin, LOW);
-}
-
-void HttpServerAdvanced::turnOffLed()
-{
-  digitalWrite(ledPin, HIGH);
-}
-
-String HttpServerAdvanced::processRequest()
+String HttpServerAdvanced::processRequest(HttpRequest* request)
 {
   //serial
-  if (uri == "/serial") {
-    if (method == "get") {
+  if (request->uri == "/serial") {
+    if (request->method == "get") {
       return readSerial();
     }
-    if (method == "post") {
-      writeSerial(data);
+    if (request->method == "post") {
+      writeSerial(request->data);
       return "";
     }
 
@@ -180,20 +124,20 @@ String HttpServerAdvanced::processRequest()
   }
 
   //digital/{pinNumber}
-  if (uri.indexOf("/digital/") == 0) {
-    String strPinNumber = uri.substring(9);
+  if (request->uri.indexOf("/digital/") == 0) {
+    String strPinNumber = request->uri.substring(9);
 
-    if (method == "get") {
+    if (request->method == "get") {
       return getPinState(strPinNumber);
     }
 
-    if (method == "post") {
-      setPinState(strPinNumber, data);
+    if (request->method == "post") {
+      setPinState(strPinNumber, request->data);
       return "";
     }
 
-    if (method == "put") {
-      initPin(strPinNumber, data);
+    if (request->method == "put") {
+      initPin(strPinNumber, request->data);
       return "";
     }
 
