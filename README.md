@@ -39,9 +39,6 @@
 
 ## TODOs
 
-- check the stored pinmode and pinstate if output at getPinState and setPinState and initPin
-- store pinstate at setPinState
-- store pinmode at initpin
 - get analog
 - put analog
 - put dht11
@@ -50,10 +47,11 @@
 
 ## Puzzles
 
-- Nodemcu + eeporm ?
+- should we allow pins to be reinitialized?
+  - Pin modes are stored in the eeprom, in case the device reboot and restores mode on reboot, meaning we should
 
 ## Compile size results
 
 - Wemos D1 R1  
-  Sketch uses 263916 bytes (25%) of program storage space. Maximum is 1044464 bytes.  
-  Global variables use 29184 bytes (35%) of dynamic memory, leaving 52736 bytes for local variables. Maximum is 81920 bytes.  
+  Sketch uses 264800 bytes (25%) of program storage space. Maximum is 1044464 bytes.  
+  Global variables use 29204 bytes (35%) of dynamic memory, leaving 52716 bytes for local variables. Maximum is 81920 bytes.  

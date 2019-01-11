@@ -32,6 +32,11 @@ void HttpServerAdvanced::setup()
 
   statusLed.setup();
 
+  eeData.setup();
+  if (!eeData.isNew) {
+    restorePinModesAndStates();
+  }
+
   if (debug) {
     Serial.print("Connecting to " + String(ssid));
   }
@@ -128,7 +133,7 @@ String HttpServerAdvanced::processRequest(HttpRequest* request)
     String strPinNumber = request->uri.substring(9);
 
     if (request->method == "get") {
-      return getPinState(strPinNumber);
+      return String(getPinState(strPinNumber));
     }
 
     if (request->method == "post") {
@@ -145,7 +150,7 @@ String HttpServerAdvanced::processRequest(HttpRequest* request)
   }
 }
 
-int HttpServerAdvanced::convertPin(String strPinNumber)
+byte HttpServerAdvanced::convertPin(String strPinNumber)
 {
   String numbers = "0123456789";
 
@@ -175,26 +180,33 @@ void HttpServerAdvanced::writeSerial(String data)
   Serial.println(data);
 }
 
-String HttpServerAdvanced::getPinState(String strPinNumber)
+byte HttpServerAdvanced::getPinState(String strPinNumber)
 {
-  int pinNumber = convertPin(strPinNumber);
+  byte pinNumber = convertPin(strPinNumber);
   if (pinNumber < 0) {
-    return "";
+    return 0;
   }
 
-  //TODO check the stored pinmode and pinstate if output
+  // if the pin is input read the value of it
+  if (isPinInput(pinNumber)) {
+    return digitalRead(pinNumber);
+  }
 
-  return String(digitalRead(pinNumber));
+  // otherwise return the stored value
+  return eeData.getPinState(pinNumber);
 }
 
 void HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
 {
-  int pinNumber = convertPin(strPinNumber);
+  byte pinNumber = convertPin(strPinNumber);
   if (pinNumber < 0) {
     return;
   }
 
-  //TODO check the stored pinmode and pinstate if output
+  // if the pin is in input mode, bail
+  if (isPinInput(pinNumber)) {
+    return;
+  }
 
   int state = -1;
   if (strPinState == "0" || strPinState == "low") {
@@ -210,8 +222,7 @@ void HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
   }
 
   digitalWrite(pinNumber, state);
-
-  //TODO store pinstate
+  eeData.storePinState(pinNumber, state);
 }
 
 void HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
@@ -220,8 +231,6 @@ void HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
   if (pinNumber < 0) {
     return;
   }
-
-  //TODO check the stored pinmode and pinstate if output
 
   int mode = -1;
   if (strPinMode == "input") {
@@ -238,6 +247,30 @@ void HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
   }
 
   pinMode(pinNumber, mode);
+  eeData.storePinMode(pinNumber, mode);
+}
 
-  //TODO store pinmode
+bool HttpServerAdvanced::isPinInput(byte pinNumber)
+{
+  return !isPinOutput(pinNumber);
+}
+
+bool HttpServerAdvanced::isPinOutput(byte pinNumber)
+{
+  return eeData.getPinMode(pinNumber) == OUTPUT;
+}
+
+void HttpServerAdvanced::restorePinModesAndStates()
+{
+  for (byte pinNumber = 0; pinNumber < 255; pinNumber++) {
+    // if it is an output pin, set the mode to output, get the stored state and write that out
+    if (isPinOutput(pinNumber)) {
+      pinMode(pinNumber, OUTPUT);
+      digitalWrite(pinNumber, eeData.getPinState(pinNumber));
+      continue;
+    }
+
+    // otherwise just set the pinmode to the stored mode
+    pinMode(pinNumber, eeData.getPinMode(pinNumber));
+  }
 }

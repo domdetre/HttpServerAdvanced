@@ -6,6 +6,7 @@
 
 #include "HttpRequest.h"
 #include "StatusLed.h"
+#include "EepromData.h"
 
 class HttpServerAdvanced
 {
@@ -15,8 +16,8 @@ class HttpServerAdvanced
     bool debug = false;
     int port = 80;
     WiFiServer* server;
-
     StatusLed statusLed;
+    EepromData eeData;
 
     HttpServerAdvanced(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
     void init(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
@@ -31,10 +32,13 @@ class HttpServerAdvanced
     String readSerial();
     void writeSerial(String data);
 
-    int convertPin(String strPinNumber);
-    String getPinState(String strPinNumber);
+    byte convertPin(String strPinNumber);
+    byte getPinState(String strPinNumber);
     void setPinState(String strPinNumber, String strPinState);
     void initPin(String strPinNumber, String strPinMode);
+    bool isPinInput(byte pinNumber);
+    bool isPinOutput(byte pinNumber);
+    void restorePinModesAndStates();
 };
 
 #endif
