@@ -8,17 +8,18 @@
 #include "HttpResponse.h"
 #include "StatusLed.h"
 #include "Settings.h"
+#include "Debug.h"
 
 class HttpServerAdvanced
 {
   public:
     const char* ssid;
     const char* sskey;
-    bool debug = false;
     int port = 80;
     WiFiServer* server;
     StatusLed statusLed;
     Settings settings;
+    Debug debug;
 
     HttpServerAdvanced(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
     void init(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
@@ -42,6 +43,7 @@ class HttpServerAdvanced
     void restorePinModesAndStates();
 
     void disableEeprom();
+    void enableDebug(bool serial = true, bool store = false);
 };
 
 #endif
