@@ -7,7 +7,7 @@
 #include "HttpRequest.h"
 #include "HttpResponse.h"
 #include "StatusLed.h"
-#include "EepromData.h"
+#include "Settings.h"
 
 class HttpServerAdvanced
 {
@@ -18,7 +18,7 @@ class HttpServerAdvanced
     int port = 80;
     WiFiServer* server;
     StatusLed statusLed;
-    EepromData eeData;
+    Settings settings;
 
     HttpServerAdvanced(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
     void init(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
@@ -40,6 +40,8 @@ class HttpServerAdvanced
     bool isPinInput(byte pinNumber);
     bool isPinOutput(byte pinNumber);
     void restorePinModesAndStates();
+
+    void disableEeprom();
 };
 
 #endif

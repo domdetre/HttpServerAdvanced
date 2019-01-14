@@ -32,8 +32,8 @@ void HttpServerAdvanced::setup()
 
   statusLed.setup();
 
-  eeData.setup();
-  if (!eeData.isNew) {
+  settings.setup();
+  if (settings.hasDataRestored()) {
     restorePinModesAndStates();
   }
 
@@ -215,7 +215,7 @@ byte HttpServerAdvanced::getPinState(String strPinNumber)
   }
 
   // otherwise return the stored value
-  return eeData.getPinState(pinNumber);
+  return settings.getPinState(pinNumber);
 }
 
 bool HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
@@ -244,7 +244,7 @@ bool HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
   }
 
   digitalWrite(pinNumber, state);
-  eeData.storePinState(pinNumber, state);
+  settings.storePinState(pinNumber, state);
   return true;
 }
 
@@ -270,7 +270,7 @@ bool HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
   }
 
   pinMode(pinNumber, mode);
-  eeData.storePinMode(pinNumber, mode);
+  settings.storePinMode(pinNumber, mode);
   return true;
 }
 
@@ -281,7 +281,7 @@ bool HttpServerAdvanced::isPinInput(byte pinNumber)
 
 bool HttpServerAdvanced::isPinOutput(byte pinNumber)
 {
-  return eeData.getPinMode(pinNumber) == OUTPUT;
+  return settings.getPinMode(pinNumber) == OUTPUT;
 }
 
 void HttpServerAdvanced::restorePinModesAndStates()
@@ -290,11 +290,16 @@ void HttpServerAdvanced::restorePinModesAndStates()
     // if it is an output pin, set the mode to output, get the stored state and write that out
     if (isPinOutput(pinNumber)) {
       pinMode(pinNumber, OUTPUT);
-      digitalWrite(pinNumber, eeData.getPinState(pinNumber));
+      digitalWrite(pinNumber, settings.getPinState(pinNumber));
       continue;
     }
 
     // otherwise just set the pinmode to the stored mode
-    pinMode(pinNumber, eeData.getPinMode(pinNumber));
+    pinMode(pinNumber, settings.getPinMode(pinNumber));
   }
+}
+
+void HttpServerAdvanced::disableEeprom()
+{
+  this->settings.eepromEnabled = false;
 }
