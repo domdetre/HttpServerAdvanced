@@ -170,6 +170,17 @@ HttpResponse HttpServerAdvanced::processRequest(HttpRequest* request)
     return HttpResponse::BadRequest();
   }
 
+  //debug
+  if (request->uri == "/debug") {
+    if (request->method == "get") {
+      return HttpResponse(
+        debug.get()
+      );
+    }
+
+    return HttpResponse::BadRequest();
+  }
+
   return HttpResponse::NotFound();
 }
 

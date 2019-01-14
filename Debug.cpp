@@ -20,6 +20,8 @@ void Debug::log(String data)
 
 String Debug::get()
 {
+  String data = this->data;
+  this->data = "";
   return data;
 }
 
