@@ -12,7 +12,7 @@ void Debug::log(String data)
     if (data.indexOf('\n') >= 0) {
       trail = "\n---------------------";
     }
-    
+
     Serial.println(String(HTTP_SERVER_ADVANCED_NAME) + String(": ") + data + trail);
   }
 
@@ -21,6 +21,27 @@ void Debug::log(String data)
   }
   else {
     this->data = data;
+  }
+}
+
+void Debug::info(String data)
+{
+  if (infoLogs) {
+    log("[INFO] " + data);
+  }
+}
+
+void Debug::warn(String data)
+{
+  if (warningLogs) {
+    log("[WARNING] " + data);
+  }
+}
+
+void Debug::error(String data)
+{
+  if (errorLogs) {
+    log("[ERROR] " + data);
   }
 }
 
@@ -33,10 +54,14 @@ String Debug::get()
 
 void Debug::waiting()
 {
-  Serial.print(".");
+  if (enabled) {
+    Serial.print(".");
+  }
 }
 
 void Debug::waitingFinished()
 {
-  Serial.println("|");
+  if (enabled) {
+    Serial.println("|");
+  }
 }

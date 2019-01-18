@@ -84,7 +84,15 @@ class HttpServerAdvanced
 
     void disableEeprom();
 
-    void enableDebug(bool serial = true, bool store = false);
+    /**
+     * Enables logging either on serial or on the http interface.
+     * @param serial      enables logs to be outputted on the serial
+     * @param store       enables logs to be stored until it can be retrieved by http interface. Warning this can easily fill the RAM.
+     * @param infoLogs    whether to include info logs
+     * @param warningLogs whether to include warning logs
+     * @param errorLogs   whether to include error logs
+     */
+    void enableDebug(bool serial = true, bool store = false, bool infoLogs = true, bool warningLogs = true, bool errorLogs = true);
 };
 
 #endif

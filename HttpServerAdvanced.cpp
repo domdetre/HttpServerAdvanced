@@ -27,7 +27,7 @@ void HttpServerAdvanced::setup()
     delay(500);
   }
 
-  debug.log("Booting... ");
+  debug.info("Version " + String(HTTP_SERVER_ADVANCED_VERSION));
 
   delay(10);
 
@@ -38,7 +38,7 @@ void HttpServerAdvanced::setup()
     restorePinModesAndStates();
   }
 
-  debug.log("Connecting to " + String(ssid));
+  debug.info("Connecting to " + String(ssid));
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, sskey);
@@ -56,11 +56,13 @@ void HttpServerAdvanced::setup()
   }
 
   debug.waitingFinished();
-  debug.log("WiFi connected");
+  debug.info("WiFi connected.");
 
   server->begin();
 
-  debug.log("Server started" + WiFi.localIP().toString());
+  debug.info("Server started, local IP: " + WiFi.localIP().toString());
+
+  debug.info("Setup complete.");
 }
 
 void HttpServerAdvanced::loop()
@@ -70,6 +72,8 @@ void HttpServerAdvanced::loop()
   if (!client) {
     return;
   }
+
+  debug.info("Got request.");
 
   waitForClient(&client);
 
@@ -86,7 +90,7 @@ void HttpServerAdvanced::loop()
 
 void HttpServerAdvanced::waitForClient(WiFiClient* client)
 {
-  debug.log("Waiting for the client to send data");
+  debug.info("Waiting for the client to send data");
 
   int counter = 0;
   while (!client->available()) {
@@ -105,14 +109,17 @@ void HttpServerAdvanced::waitForClient(WiFiClient* client)
   }
 
   debug.waitingFinished();
+  debug.info("All data received from the client.");
 }
 
 HttpResponse HttpServerAdvanced::processRequest(HttpRequest* request)
 {
-  debug.log("Processesing request");
-  debug.log("request uri: " + request->uri);
-  debug.log("request method: " + request->method);
-  debug.log("request data: " + request->data);
+  debug.info("Processesing request");
+  debug.info("request method: " + request->method);
+  debug.info("request uri: " + request->uri);
+  debug.info("request protocol: " + request->protocol);
+  debug.info("request headers: " + request->headers);
+  debug.info("request data: " + request->data);
 
   //serial
   if (request->uri == "/serial") {
@@ -179,8 +186,11 @@ HttpResponse HttpServerAdvanced::processRequest(HttpRequest* request)
 
 byte HttpServerAdvanced::convertPin(String strPinNumber)
 {
+  debug.info("Converting pin: " + strPinNumber);
+
   bool digital = false;
   if (strPinNumber.indexOf("d") == 0) {
+    debug.info("Pin format is D#");
     digital = true;
     strPinNumber.remove(0, 1);
   }
@@ -189,10 +199,12 @@ byte HttpServerAdvanced::convertPin(String strPinNumber)
 
   // The length of the number can only be 1 or 2 digits
   if (strPinNumber.length() > 2 || strPinNumber.length() == 0) {
+    debug.error("Too many or too few digits: " + String(strPinNumber.length()));
     return 255;
   }
 
   if (numbers.indexOf(strPinNumber[0]) < 0 || numbers.indexOf(strPinNumber[1]) < 0) {
+    debug.error("Digits contain non-numeric character");
     return 255;
   }
 
@@ -237,11 +249,14 @@ byte HttpServerAdvanced::convertPin(String strPinNumber)
       return D15;
   }
 
+  debug.error("D# pin format is out of range. Range: 0-15");
   return 255;
 }
 
 String HttpServerAdvanced::readSerial()
 {
+  debug.info("Reading serial data.");
+
   String serialData;
   while (Serial.available()) {
     serialData += char(Serial.read());
@@ -252,39 +267,50 @@ String HttpServerAdvanced::readSerial()
 
 void HttpServerAdvanced::writeSerial(String data)
 {
+  debug.info("Writing serial data.");
+
   Serial.println(data);
 }
 
 byte HttpServerAdvanced::getPinState(String strPinNumber)
 {
+  debug.info("Getting the state of pin: " + strPinNumber);
+
+  byte pinState = 0;
   byte pinNumber = convertPin(strPinNumber);
   if (pinNumber == 255) {
     return 255;
   }
 
+  debug.info("GPIO pin number: " + String(pinNumber));
+
   // if the pin is input mode, read the value of it
   if (isPinInput(pinNumber)) {
-    return digitalRead(pinNumber);
+    pinState = digitalRead(pinNumber);
+    debug.info("Pin is in input mode, read state: " + String(pinState));
+    return pinState;
   }
 
   // otherwise return the stored value
-  return settings.getPinState(pinNumber);
+  pinState = settings.getPinState(pinNumber);
+  debug.info("Pin is in output mode, stored state: " + String(pinState));
+  return pinState;
 }
 
 bool HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
 {
-  debug.log("Setting pin state");
+  debug.info("Setting pin state of " + strPinNumber + " to " + strPinState);
 
   byte pinNumber = convertPin(strPinNumber);
   if (pinNumber == 255) {
     return false;
   }
 
-  debug.log("pin number: " + String(pinNumber));
+  debug.info("GPIO pin number: " + String(pinNumber));
 
   // if the pin is in input mode, bail
   if (isPinInput(pinNumber)) {
-    debug.log("pin is input");
+    debug.warn("The pin is in input mode!");
     return false;
   }
 
@@ -297,9 +323,10 @@ bool HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
     state = HIGH;
   }
 
-  debug.log("pin state: " + String(state));
+  debug.info("Requested pin state: " + String(state));
 
   if (state < 0) {
+    debug.warn("The requested state is invalid! Accepted values: 0, 1, low, high.");
     return false;
   }
 
@@ -310,14 +337,14 @@ bool HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
 
 bool HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
 {
-  debug.log("Init pin ...");
+  debug.info("Initializing pin " + strPinNumber + " with mode " + strPinMode);
 
   int pinNumber = convertPin(strPinNumber);
   if (pinNumber == 255) {
     return false;
   }
 
-  debug.log("pin number: " + String(pinNumber));
+  debug.info("GPIO pin number: " + String(pinNumber));
 
   int mode = -1;
   if (strPinMode == "input") {
@@ -330,14 +357,13 @@ bool HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
     mode = INPUT_PULLUP;
   }
   else {
-    debug.log("pin mode is invalid");
+    debug.error("Requested pin mode is invalid! Only input, output, input_pullup are accepted.");
     return false;
   }
 
-  debug.log("pin mode: " + String(mode));
-
   pinMode(pinNumber, mode);
   settings.storePinMode(pinNumber, mode);
+  debug.info("Pin initialized with mode " + String(mode));
   return true;
 }
 
@@ -353,16 +379,21 @@ bool HttpServerAdvanced::isPinOutput(byte pinNumber)
 
 void HttpServerAdvanced::restorePinModesAndStates()
 {
+  debug.info("Restoring pin modes and states.");
+
   for (byte pinNumber = 0; pinNumber < 255; pinNumber++) {
     // if it is an output pin, set the mode to output, get the stored state and write that out
     if (isPinOutput(pinNumber)) {
+      byte pinState = settings.getPinState(pinNumber);
       pinMode(pinNumber, OUTPUT);
-      digitalWrite(pinNumber, settings.getPinState(pinNumber));
+      digitalWrite(pinNumber, pinState);
+      debug.info("Restored pin " + String(pinNumber) + " with mode output and state " + String(pinState));
       continue;
     }
 
     // otherwise just set the pinmode to the stored mode
     pinMode(pinNumber, settings.getPinMode(pinNumber));
+    debug.info("Restored pin " + String(pinNumber) + " with mode input or input_pullup");
   }
 }
 
@@ -371,9 +402,13 @@ void HttpServerAdvanced::disableEeprom()
   this->settings.eepromEnabled = false;
 }
 
-void HttpServerAdvanced::enableDebug(bool serial, bool store)
+void HttpServerAdvanced::enableDebug(bool serial, bool store, bool infoLogs, bool warningLogs, bool errorLogs)
 {
   debug.enabled = true;
   debug.serial = serial;
   debug.store = store;
+
+  debug.infoLogs = infoLogs;
+  debug.warningLogs = warningLogs;
+  debug.errorLogs = errorLogs;
 }

@@ -47,14 +47,29 @@
 - put dht11
 - put hc-sr04
 - put debug
+- software serial option for the output
+- option to disable serial relay
+- options to add custom endpoints
+- option to have multiple relay client
+- endpoint to get the available endpoints
+- endpoint for getting help
+- endpoint to get system informations
 
 ## Puzzles
 
 - should we allow pins to be reinitialized?
   - Pin modes are stored in the eeprom, in case the device reboot and restores mode on reboot, meaning we should
 
+## ESP8266
+
+### Pins
+
+- ESP8266WiFi.h has definitions for digital pin mappings from D0 to D15
+- The LED_BUILTIN and D4 is the same. So the builtin led is wired to the digital 4 pin in inverse mode. LOW = on, HIGH = off.
+- The digital pins are HIGH before initialization. So inverse mode is preferred.
+
 ## Compile size results
 
 - Wemos D1 R1  
-  Sketch uses 268708 bytes (25%) of program storage space. Maximum is 1044464 bytes.  
-  Global variables use 29496 bytes (36%) of dynamic memory, leaving 52424 bytes for local variables. Maximum is 81920 bytes.  
+  Sketch uses 271080 bytes (25%) of program storage space. Maximum is 1044464 bytes.  
+  Global variables use 30316 bytes (37%) of dynamic memory, leaving 51604 bytes for local variables. Maximum is 81920 bytes.   
