@@ -14,6 +14,9 @@
 - GET /digital/{pinNumber}  
   If the pin is initialized as input, then will return the state of the pin.
   If the pin is initialized as output, then will return the stored state of the pin.
+  If the parameter is numeric the related GPIO pin will be used.
+  If the parameter is D# format, the related data pin will be used. So it will be converted to the appropiate GPIO pin.
+  Currently it only support digital pins up to D15.
 
 - POST /digital/{pinNumber}  --data {0|1|low|high}
   If the pin is initialized as input, then nothing will happen.  

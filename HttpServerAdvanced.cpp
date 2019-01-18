@@ -134,10 +134,13 @@ HttpResponse HttpServerAdvanced::processRequest(HttpRequest* request)
     String strPinNumber = request->uri.substring(9);
 
     if (request->method == "get") {
+      byte state = getPinState(strPinNumber);
+      if (state == 255) {
+        return HttpResponse::BadRequest();
+      }
+
       return HttpResponse(
-        String(
-          getPinState(strPinNumber)
-        )
+        String(state, DEC)
       );
     }
 
@@ -176,17 +179,65 @@ HttpResponse HttpServerAdvanced::processRequest(HttpRequest* request)
 
 byte HttpServerAdvanced::convertPin(String strPinNumber)
 {
+  bool digital = false;
+  if (strPinNumber.indexOf("d") == 0) {
+    digital = true;
+    strPinNumber.remove(0, 1);
+  }
+
   String numbers = "0123456789";
 
+  // The length of the number can only be 1 or 2 digits
   if (strPinNumber.length() > 2 || strPinNumber.length() == 0) {
-    return -1;
+    return 255;
   }
 
   if (numbers.indexOf(strPinNumber[0]) < 0 || numbers.indexOf(strPinNumber[1]) < 0) {
-    return -1;
+    return 255;
   }
 
-  return numbers.toInt();
+  int pinNumber = strPinNumber.toInt();
+
+  if (!digital) {
+    return pinNumber;
+  }
+
+  switch (pinNumber) {
+    case 0:
+      return D0;
+    case 1:
+      return D1;
+    case 2:
+      return D2;
+    case 3:
+      return D3;
+    case 4:
+      return D4;
+    case 5:
+      return D5;
+    case 6:
+      return D6;
+    case 7:
+      return D7;
+    case 8:
+      return D8;
+    case 9:
+      return D9;
+    case 10:
+      return D10;
+    case 11:
+      return D11;
+    case 12:
+      return D12;
+    case 13:
+      return D13;
+    case 14:
+      return D14;
+    case 15:
+      return D15;
+  }
+
+  return 255;
 }
 
 String HttpServerAdvanced::readSerial()
@@ -207,11 +258,11 @@ void HttpServerAdvanced::writeSerial(String data)
 byte HttpServerAdvanced::getPinState(String strPinNumber)
 {
   byte pinNumber = convertPin(strPinNumber);
-  if (pinNumber < 0) {
-    return 0;
+  if (pinNumber == 255) {
+    return 255;
   }
 
-  // if the pin is input read the value of it
+  // if the pin is input mode, read the value of it
   if (isPinInput(pinNumber)) {
     return digitalRead(pinNumber);
   }
@@ -225,7 +276,7 @@ bool HttpServerAdvanced::setPinState(String strPinNumber, String strPinState)
   debug.log("Setting pin state");
 
   byte pinNumber = convertPin(strPinNumber);
-  if (pinNumber < 0) {
+  if (pinNumber == 255) {
     return false;
   }
 
@@ -262,7 +313,7 @@ bool HttpServerAdvanced::initPin(String strPinNumber, String strPinMode)
   debug.log("Init pin ...");
 
   int pinNumber = convertPin(strPinNumber);
-  if (pinNumber < 0) {
+  if (pinNumber == 255) {
     return false;
   }
 
