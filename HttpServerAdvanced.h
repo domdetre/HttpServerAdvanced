@@ -4,11 +4,15 @@
 #include <ESP8266WiFi.h>
 #include <Arduino.h>
 
+#define HTTP_SERVER_ADVANCED_VERSION "1.0.0"
+#define HTTP_SERVER_ADVANCED_NAME "HTTP Server Advanced"
+
 #include "HttpRequest.h"
 #include "HttpResponse.h"
 #include "StatusLed.h"
 #include "Settings.h"
 #include "Debug.h"
+
 
 class HttpServerAdvanced
 {

@@ -1,4 +1,5 @@
 #include "Debug.h"
+#include "HttpServerAdvanced.h"
 
 void Debug::log(String data)
 {
@@ -7,7 +8,12 @@ void Debug::log(String data)
   }
 
   if (serial) {
-    Serial.println(data);
+    String trail = "";
+    if (data.indexOf('\n') >= 0) {
+      trail = "\n---------------------";
+    }
+    
+    Serial.println(String(HTTP_SERVER_ADVANCED_NAME) + String(": ") + data + trail);
   }
 
   if (store) {
