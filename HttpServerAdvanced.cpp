@@ -107,16 +107,6 @@ void HttpServerAdvanced::waitForClient(WiFiClient* client)
   debug.waitingFinished();
 }
 
-/**
- * Processes the request and returns accodringly
- * If the endpoint cannot be found, returns 404
- * If the endpoint can be found, but the parameters
- * or method is not supported, returns 400
- * If the endpoint can be found, and the parameters are good,
- * but the operation failed the validation, returns 406
- * @param  request The request to process
- * @return         HttpResponse
- */
 HttpResponse HttpServerAdvanced::processRequest(HttpRequest* request)
 {
   debug.log("Processesing request");
