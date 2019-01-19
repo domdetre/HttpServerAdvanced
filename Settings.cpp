@@ -118,3 +118,23 @@ byte Settings::readByteSet(byte* byteSet, byte byteIndex)
   byte bitIndex = getBitIndex(byteIndex);
   return bitRead(byteSet[byteSetIndex], bitIndex);
 }
+
+bool Settings::isPinInitalized(byte pinNumber)
+{
+  return bitRead(pinInits, pinNumber) == 1;
+}
+
+bool Settings::isPinLocked(byte pinNumber)
+{
+  return bitRead(pinLocks, pinNumber) == 1;
+}
+
+void Settings::setPinInit(byte pinNumber)
+{
+  bitSet(pinInits, pinNumber);
+}
+
+void Settings::setPinLock(byte pinNumber)
+{
+  bitSet(pinLocks, pinNumber);
+}

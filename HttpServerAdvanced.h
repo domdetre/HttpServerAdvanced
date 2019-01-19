@@ -12,7 +12,7 @@
 #include "StatusLed.h"
 #include "Settings.h"
 #include "Debug.h"
-
+#include "Pins.h"
 
 class HttpServerAdvanced
 {
@@ -24,6 +24,7 @@ class HttpServerAdvanced
     StatusLed statusLed;
     Settings settings;
     Debug debug;
+    Pins pins;
 
     HttpServerAdvanced(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
 
@@ -48,39 +49,14 @@ class HttpServerAdvanced
      */
     HttpResponse processRequest(HttpRequest* request);
 
+    HttpResponse processRequestOfSerial(HttpRequest* request);
+    HttpResponse processRequestOfDigital(HttpRequest* request);
+
     String readSerial();
 
     void writeSerial(String data);
 
-    /**
-     * Converts the String pin to byte pin and validates it.
-     * It accepts numeric value where the string is going to be converted to integer meaning the GPIO pin is going to be used.
-     * Accepts D# format where the digital pin number will be translated to a GPIO pin and that will be returned.
-     * If the string doesn't confomr any of the above rules, it will return 255, indicating an error.
-     * @param  String strPinNumber Numeric or D# format
-     * @return byte                The GPIO pin number or 255 on error
-     */
-    byte convertPin(String strPinNumber);
-
-    /**
-     * Gets the state of the pin.
-     * If the pin is in input mode, then it will return result of digitalRead method.
-     * If the pin is in output mode, then it will return the last set state stored.
-     * If the pinnumber is not correct will return 255.
-     * @param  String strPinNumber Numeric or D# format
-     * @return byte                0 or 1 or 255
-     */
-    byte getPinState(String strPinNumber);
-
-    bool setPinState(String strPinNumber, String strPinState);
-
-    bool initPin(String strPinNumber, String strPinMode);
-
-    bool isPinInput(byte pinNumber);
-
-    bool isPinOutput(byte pinNumber);
-
-    void restorePinModesAndStates();
+    String getPinData(byte digitalPinNumber);
 
     void disableEeprom();
 

@@ -18,7 +18,7 @@ HttpResponse::HttpResponse()
 String HttpResponse::toString()
 {
   return protocol + " " + String(code) + " " + status + "\r\n" +
-    "Content-Type: " + contentType +  "\r\n\r\n" + data;
+    "Content-Type: " + contentType +  "\r\n\r\n" + data + "\r\n";
 }
 
 HttpResponse HttpResponse::BadRequest()

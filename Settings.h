@@ -18,6 +18,9 @@ class Settings
     byte pinModes[2] = {0,0};
     byte pinPullups[2] = {0,0};
 
+    int pinInits = 0;
+    int pinLocks = 0;
+
     bool eepromEnabled = true;
     bool dataRestored = false;
 
@@ -39,6 +42,11 @@ class Settings
 
     void writeByteSet(byte* byteSet, byte byteIndex, byte value);
     byte readByteSet(byte* byteSet, byte byteIndex);
+
+    bool isPinInitalized(byte pinNumber);
+    bool isPinLocked(byte pinNumber);
+    void setPinLock(byte pinNumber);
+    void setPinInit(byte pinNumber);
 };
 
 #endif
