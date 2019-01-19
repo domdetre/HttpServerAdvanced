@@ -12,9 +12,11 @@ void Settings::setup()
     initEeprom();
   }
 
-  pinStates = EEPROM.read(EEPROM_INDEX_PINSTATES);
-  pinModes = EEPROM.read(EEPROM_INDEX_PINMODES);
-  pinPullups = EEPROM.read(EEPROM_INDEX_PINPULLUPS);
+  for (byte bitSet = 0; bitSet < 2; bitSet++) {
+    pinStates[bitSet] = EEPROM.read(EEPROM_INDEX_PINSTATES + bitSet);
+    pinModes[bitSet] = EEPROM.read(EEPROM_INDEX_PINMODES + bitSet);
+    pinPullups[bitSet] = EEPROM.read(EEPROM_INDEX_PINPULLUPS + bitSet);
+  }
 
   dataRestored = true;
 }
@@ -40,46 +42,47 @@ void Settings::initEeprom()
   EEPROM.commit();
 }
 
-/**
-  *  INPUT = 0
-  *  OUTPUT = 1
-  */
 void Settings::storePinMode(byte pinNumber, byte mode)
 {
+  byte bitSet = getByteSetIndex(pinNumber);
+
   if (mode == OUTPUT) {
-    bitWrite(pinModes, pinNumber, 1);
-    bitWrite(pinPullups, pinNumber, 0);
+    bitWrite(pinModes[bitSet], getBitIndex(pinNumber), OUTPUT);
+    bitWrite(pinPullups[bitSet], getBitIndex(pinNumber), 0);
   }
   else {
-    bitWrite(pinModes, pinNumber, 0);
-    bitWrite(pinPullups, pinNumber, (mode == INPUT_PULLUP));
+    bitWrite(pinModes[bitSet], getBitIndex(pinNumber), INPUT);
+    bitWrite(pinPullups[bitSet], getBitIndex(pinNumber), (mode == INPUT_PULLUP));
   }
 
   if (this->eepromEnabled) {
-    EEPROM.write(EEPROM_INDEX_PINMODES, pinModes);
-    EEPROM.write(EEPROM_INDEX_PINPULLUPS, pinPullups);
+    EEPROM.write(EEPROM_INDEX_PINMODES + bitSet, pinModes[bitSet]);
+    EEPROM.write(EEPROM_INDEX_PINPULLUPS + bitSet, pinPullups[bitSet]);
     EEPROM.commit();
   }
 }
 
 void Settings::storePinState(byte pinNumber, bool isHigh)
 {
-  bitWrite(pinStates, pinNumber, isHigh);
+  byte bitSet = getByteSetIndex(pinNumber);
+
+  bitWrite(pinStates[bitSet], getBitIndex(pinNumber), isHigh);
 
   if (this->eepromEnabled) {
-    EEPROM.write(EEPROM_INDEX_PINSTATES, pinStates);
+    EEPROM.write(EEPROM_INDEX_PINSTATES + bitSet, pinStates[bitSet]);
     EEPROM.commit();
   }
 }
 
 byte Settings::getPinMode(byte pinNumber)
 {
+  byte bitSet = getByteSetIndex(pinNumber);
 
-  if (bitRead(pinModes, pinNumber) == OUTPUT) {
+  if (bitRead(pinModes[bitSet], getBitIndex(pinNumber)) == OUTPUT) {
     return OUTPUT;
   }
 
-  if (bitRead(pinPullups, pinNumber) == 1) {
+  if (bitRead(pinPullups[bitSet], getBitIndex(pinNumber)) == 1) {
     return INPUT_PULLUP;
   }
 
@@ -88,10 +91,23 @@ byte Settings::getPinMode(byte pinNumber)
 
 byte Settings::getPinState(byte pinNumber)
 {
-  return bitRead(pinStates, pinNumber);
+  byte bitSet = getByteSetIndex(pinNumber);
+
+  return bitRead(pinStates[bitSet], getBitIndex(pinNumber));
 }
 
 bool Settings::hasDataRestored()
 {
   return dataRestored;
 }
+
+byte Settings::getByteSetIndex(byte bytePosition)
+{
+  return (byte)(bytePosition / 8);
+}
+
+byte Settings::getBitIndex(byte byteIndex)
+{
+  return byteIndex - 8 * getByteSetIndex(byteIndex);
+}
+
