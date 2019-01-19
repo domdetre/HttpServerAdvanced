@@ -37,6 +37,8 @@ class Settings
     byte getByteSetIndex(byte byteIndex);
     byte getBitIndex(byte byteIndex);
 
+    void writeByteSet(byte* byteSet, byte byteIndex, byte value);
+    byte readByteSet(byte* byteSet, byte byteIndex);
 };
 
 #endif

@@ -12,10 +12,10 @@ void Settings::setup()
     initEeprom();
   }
 
-  for (byte bitSet = 0; bitSet < 2; bitSet++) {
-    pinStates[bitSet] = EEPROM.read(EEPROM_INDEX_PINSTATES + bitSet);
-    pinModes[bitSet] = EEPROM.read(EEPROM_INDEX_PINMODES + bitSet);
-    pinPullups[bitSet] = EEPROM.read(EEPROM_INDEX_PINPULLUPS + bitSet);
+  for (byte byteSetIndex = 0; byteSetIndex < 2; byteSetIndex++) {
+    pinStates[byteSetIndex] = EEPROM.read(EEPROM_INDEX_PINSTATES + byteSetIndex);
+    pinModes[byteSetIndex] = EEPROM.read(EEPROM_INDEX_PINMODES + byteSetIndex);
+    pinPullups[byteSetIndex] = EEPROM.read(EEPROM_INDEX_PINPULLUPS + byteSetIndex);
   }
 
   dataRestored = true;
@@ -44,45 +44,41 @@ void Settings::initEeprom()
 
 void Settings::storePinMode(byte pinNumber, byte mode)
 {
-  byte bitSet = getByteSetIndex(pinNumber);
-
   if (mode == OUTPUT) {
-    bitWrite(pinModes[bitSet], getBitIndex(pinNumber), OUTPUT);
-    bitWrite(pinPullups[bitSet], getBitIndex(pinNumber), 0);
+    writeByteSet(pinModes, pinNumber, OUTPUT);
+    writeByteSet(pinPullups, pinNumber, 0);
   }
   else {
-    bitWrite(pinModes[bitSet], getBitIndex(pinNumber), INPUT);
-    bitWrite(pinPullups[bitSet], getBitIndex(pinNumber), (mode == INPUT_PULLUP));
+    writeByteSet(pinModes, pinNumber, INPUT);
+    writeByteSet(pinPullups, pinNumber, (mode == INPUT_PULLUP));
   }
 
   if (this->eepromEnabled) {
-    EEPROM.write(EEPROM_INDEX_PINMODES + bitSet, pinModes[bitSet]);
-    EEPROM.write(EEPROM_INDEX_PINPULLUPS + bitSet, pinPullups[bitSet]);
+    byte byteSetIndex = getByteSetIndex(pinNumber);
+    EEPROM.write(EEPROM_INDEX_PINMODES + byteSetIndex, pinModes[byteSetIndex]);
+    EEPROM.write(EEPROM_INDEX_PINPULLUPS + byteSetIndex, pinPullups[byteSetIndex]);
     EEPROM.commit();
   }
 }
 
 void Settings::storePinState(byte pinNumber, bool isHigh)
 {
-  byte bitSet = getByteSetIndex(pinNumber);
-
-  bitWrite(pinStates[bitSet], getBitIndex(pinNumber), isHigh);
+  writeByteSet(pinStates, pinNumber, isHigh);
 
   if (this->eepromEnabled) {
-    EEPROM.write(EEPROM_INDEX_PINSTATES + bitSet, pinStates[bitSet]);
+    byte byteSetIndex = getByteSetIndex(pinNumber);
+    EEPROM.write(EEPROM_INDEX_PINSTATES + byteSetIndex, pinStates[byteSetIndex]);
     EEPROM.commit();
   }
 }
 
 byte Settings::getPinMode(byte pinNumber)
 {
-  byte bitSet = getByteSetIndex(pinNumber);
-
-  if (bitRead(pinModes[bitSet], getBitIndex(pinNumber)) == OUTPUT) {
+  if (readByteSet(pinModes, pinNumber) == OUTPUT) {
     return OUTPUT;
   }
 
-  if (bitRead(pinPullups[bitSet], getBitIndex(pinNumber)) == 1) {
+  if (readByteSet(pinPullups, pinNumber) == 1) {
     return INPUT_PULLUP;
   }
 
@@ -91,9 +87,7 @@ byte Settings::getPinMode(byte pinNumber)
 
 byte Settings::getPinState(byte pinNumber)
 {
-  byte bitSet = getByteSetIndex(pinNumber);
-
-  return bitRead(pinStates[bitSet], getBitIndex(pinNumber));
+  return readByteSet(pinStates, pinNumber);
 }
 
 bool Settings::hasDataRestored()
@@ -111,3 +105,16 @@ byte Settings::getBitIndex(byte byteIndex)
   return byteIndex - 8 * getByteSetIndex(byteIndex);
 }
 
+void Settings::writeByteSet(byte* byteSet, byte byteIndex, byte value)
+{
+  byte byteSetIndex = getByteSetIndex(byteIndex);
+  byte bitIndex = getBitIndex(byteIndex);
+  bitWrite(byteSet[byteSetIndex], bitIndex, value);
+}
+
+byte Settings::readByteSet(byte* byteSet, byte byteIndex)
+{
+  byte byteSetIndex = getByteSetIndex(byteIndex);
+  byte bitIndex = getBitIndex(byteIndex);
+  return bitRead(byteSet[byteSetIndex], bitIndex);
+}
