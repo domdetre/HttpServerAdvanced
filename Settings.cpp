@@ -138,3 +138,13 @@ void Settings::setPinLock(byte pinNumber)
 {
   bitSet(pinLocks, pinNumber);
 }
+
+void Settings::unsetPinInit(byte pinNumber)
+{
+  bitClear(pinInits, pinNumber);
+}
+
+void Settings::unsetPinLock(byte pinNumber)
+{
+  bitClear(pinLocks, pinNumber);
+}

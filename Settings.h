@@ -45,8 +45,12 @@ class Settings
 
     bool isPinInitalized(byte pinNumber);
     bool isPinLocked(byte pinNumber);
+    
     void setPinLock(byte pinNumber);
     void setPinInit(byte pinNumber);
+
+    void unsetPinLock(byte pinNumber);
+    void unsetPinInit(byte pinNumber);
 };
 
 #endif
