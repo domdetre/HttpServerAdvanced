@@ -223,8 +223,8 @@ HttpResponse HttpServerAdvanced::processRequestOfDigital(HttpRequest* request)
     }
 
     if (
-      request->data != "input" ||
-      request->data != "output" ||
+      request->data != "input" &&
+      request->data != "output" &&
       request->data != "input_pullup"
     ) {
       return HttpResponse::BadRequest(
@@ -291,20 +291,32 @@ void HttpServerAdvanced::enableDebug(bool serial, bool store, bool infoLogs, boo
 String HttpServerAdvanced::getPinData(byte digitalPinNumber)
 {
   if (!settings.isPinInitalized(digitalPinNumber)) {
-    return "Not initialized";
+    return
+      "initialized: " +
+        String(settings.isPinInitalized(digitalPinNumber), DEC) +
+        "\r\n" +
+      "locked: " +
+        String(settings.isPinLocked(digitalPinNumber), DEC) +
+        "\r\n" +
+      "state: ?" +
+        "\r\n" +
+      "mode: ?" +
+        "\r\n"
+    ;
   }
 
   return
     "initialized: " +
       String(settings.isPinInitalized(digitalPinNumber), DEC) +
       "\r\n" +
+    "locked: " +
+      String(settings.isPinLocked(digitalPinNumber), DEC) +
+      "\r\n" +
     "state: " +
       String(pins.getState(digitalPinNumber), DEC) +
       "\r\n" +
     "mode: " +
       String(settings.getPinMode(digitalPinNumber), DEC) +
-      "\r\n" +
-    "locked: " +
-      String(settings.isPinLocked(digitalPinNumber), DEC) +
-      "\r\n";
+      "\r\n"
+  ;
 }

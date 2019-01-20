@@ -100,7 +100,7 @@ bool Pins::setState(byte digitalPinNumber, String strPinState)
     return false;
   }
 
-  if (!settings->isPinLocked(digitalPinNumber)) {
+  if (settings->isPinLocked(digitalPinNumber)) {
     debug->error(
       "The pin is locked!"
     );
