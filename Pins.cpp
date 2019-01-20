@@ -114,6 +114,16 @@ bool Pins::initPin(byte digitalPinNumber, String strPinMode)
 {
   debug->info("Initializing pin " + String(digitalPinNumber) + " with mode " + strPinMode);
 
+  if (settings->isPinInitalized(digitalPinNumber)) {
+    debug->error("Pin is already initialized");
+    return false;
+  }
+
+  if (settings->isPinLocked(digitalPinNumber)) {
+    debug->error("Pin is locked");
+    return false;
+  }
+
   byte gpioNumber = digital2gpio(digitalPinNumber);
   if (gpioNumber == 255) {
     return false;
@@ -158,6 +168,13 @@ void Pins::restorePinModesAndStates()
   debug->info("Restoring pin modes and states.");
 
   for (byte digitalPinNumber = 0; digitalPinNumber < 16; digitalPinNumber++) {
+    if (
+      !settings->isPinInitalized(digitalPinNumber) ||
+      settings->isPinLocked(digitalPinNumber)
+    ) {
+      continue;
+    }
+
     byte gpioNumber = digital2gpio(digitalPinNumber);
 
     // if it is an output pin, set the mode to output, get the stored state and write that out
@@ -165,12 +182,14 @@ void Pins::restorePinModesAndStates()
       byte pinState = settings->getPinState(digitalPinNumber);
       pinMode(gpioNumber, OUTPUT);
       digitalWrite(gpioNumber, pinState);
+
       debug->info("Restored pin " + String(digitalPinNumber) + " with mode output and state " + String(pinState));
       continue;
     }
 
     // otherwise just set the pinmode to the stored mode
     pinMode(gpioNumber, settings->getPinMode(digitalPinNumber));
+
     debug->info("Restored pin " + String(digitalPinNumber) + " with mode input or input_pullup");
   }
 }

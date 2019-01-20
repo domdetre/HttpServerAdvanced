@@ -203,6 +203,14 @@ HttpResponse HttpServerAdvanced::processRequestOfDigital(HttpRequest* request)
     return HttpResponse::Unacceptable();
   }
 
+  if (request->method == "delete") {
+    if (!settings.isPinLocked(pinNumber)) {
+      settings.unsetPinInit(pinNumber);
+    }
+
+    return HttpResponse::Unacceptable();
+  }
+
   return HttpResponse::BadRequest();
 }
 

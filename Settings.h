@@ -5,21 +5,22 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
+#define EEPROM_ID 112
 #define EEPROM_LENGTH 128
 #define EEPROM_INDEX_PINMODES 3
 #define EEPROM_INDEX_PINPULLUPS 5
 #define EEPROM_INDEX_PINSTATES 7
+#define EEPROM_INDEX_PININITS 9
+#define EEPROM_INDEX_PINLOCKS 11
 
 class Settings
 {
   public:
-    byte id[3] = {193, 193, 193};
     byte pinStates[2] = {0,0};
     byte pinModes[2] = {0,0};
     byte pinPullups[2] = {0,0};
-
-    int pinInits = 0;
-    int pinLocks = 0;
+    byte pinInits[2] = {0,0};
+    byte pinLocks[2] = {0,0};
 
     bool eepromEnabled = true;
     bool dataRestored = false;
@@ -45,12 +46,14 @@ class Settings
 
     bool isPinInitalized(byte pinNumber);
     bool isPinLocked(byte pinNumber);
-    
+
     void setPinLock(byte pinNumber);
     void setPinInit(byte pinNumber);
 
     void unsetPinLock(byte pinNumber);
     void unsetPinInit(byte pinNumber);
+
+    void writeEeprom(byte eepromIndex, byte* byteSet);
 };
 
 #endif
