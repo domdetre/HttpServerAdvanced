@@ -11,6 +11,13 @@ HttpResponse::HttpResponse(String data)
   this->data = data;
 }
 
+HttpResponse::HttpResponse(int code, String status, String data)
+{
+  this->code = code;
+  this->status = status;
+  this->data = data;
+}
+
 HttpResponse::HttpResponse()
 {
 }
@@ -21,17 +28,22 @@ String HttpResponse::toString()
     "Content-Type: " + contentType +  "\r\n\r\n" + data + "\r\n";
 }
 
-HttpResponse HttpResponse::BadRequest()
+HttpResponse HttpResponse::BadRequest(String data)
 {
-  return HttpResponse(400, "Bad Request");
+  return HttpResponse(400, "Bad Request", data);
 }
 
-HttpResponse HttpResponse::NotFound()
+HttpResponse HttpResponse::NotFound(String data)
 {
-  return HttpResponse(404, "Not Found");
+  return HttpResponse(404, "Not Found", data);
 }
 
-HttpResponse HttpResponse::Unacceptable()
+HttpResponse HttpResponse::Unacceptable(String data)
 {
-  return HttpResponse(406, "Not Acceptable");
+  return HttpResponse(406, "Not Acceptable", data);
+}
+
+HttpResponse HttpResponse::InternalError(String data)
+{
+  return HttpResponse(500, "Internal Server Error", data);
 }

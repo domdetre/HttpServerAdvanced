@@ -169,13 +169,43 @@ HttpResponse HttpServerAdvanced::processRequestOfDigital(HttpRequest* request)
 
   byte pinNumber = strPinNumber.toInt();
   if (String(pinNumber) != strPinNumber) {
-    return HttpResponse::Unacceptable();
+    return HttpResponse::BadRequest(
+      "The pin number contains non-digit characters."
+    );
   }
 
+  if (pinNumber < 0 || pinNumber > 15) {
+    return HttpResponse::BadRequest(
+      "The pin number is out of range. Range: 0-15"
+    );
+  }
+
+  // GET
   if (request->method == "get") {
-    byte pinState = pins.getState(pinNumber);
-    if (pinState == 255) {
-      return HttpResponse::BadRequest();
+    return HttpResponse(
+      getPinData(pinNumber)
+    );
+  }
+
+  // If the pin is locked, only get is allowed
+  if (settings.isPinLocked(pinNumber)) {
+    return HttpResponse::Unacceptable(
+      "The pin is locked, can't set state.\r\n" +
+      getPinData(pinNumber)
+    );
+  }
+
+  // POST
+  if (request->method == "post") {
+    if (settings.getPinMode(pinNumber) != OUTPUT) {
+      return HttpResponse::Unacceptable(
+        "The pin is not in output mode, can't set state.\r\n" +
+        getPinData(pinNumber)
+      );
+    }
+
+    if (!pins.setState(pinNumber, request->data)) {
+      return HttpResponse::InternalError();
     }
 
     return HttpResponse(
@@ -183,32 +213,41 @@ HttpResponse HttpServerAdvanced::processRequestOfDigital(HttpRequest* request)
     );
   }
 
-  if (request->method == "post") {
-    if (pins.setState(pinNumber, request->data)) {
-      return HttpResponse(
-        getPinData(pinNumber)
-      );
-    }
-
-    return HttpResponse::Unacceptable();
-  }
-
+  // PUT
   if (request->method == "put") {
-    if (pins.initPin(pinNumber, request->data)) {
-      return HttpResponse(
+    if (settings.isPinInitalized(pinNumber)) {
+      return HttpResponse::Unacceptable(
+        "The pin is already initialized.\r\n" +
         getPinData(pinNumber)
       );
     }
 
-    return HttpResponse::Unacceptable();
-  }
-
-  if (request->method == "delete") {
-    if (!settings.isPinLocked(pinNumber)) {
-      settings.unsetPinInit(pinNumber);
+    if (
+      request->data != "input" ||
+      request->data != "output" ||
+      request->data != "input_pullup"
+    ) {
+      return HttpResponse::BadRequest(
+        "Bad mode requested. Following is accepted: input, output, input_pullup."
+      );
     }
 
-    return HttpResponse::Unacceptable();
+    if (!pins.initPin(pinNumber, request->data)) {
+      return HttpResponse::InternalError();
+    }
+
+    return HttpResponse(
+      getPinData(pinNumber)
+    );
+  }
+
+  // DELETE
+  if (request->method == "delete") {
+    settings.unsetPinInit(pinNumber);
+
+    return HttpResponse(
+      getPinData(pinNumber)
+    );
   }
 
   return HttpResponse::BadRequest();
@@ -256,10 +295,16 @@ String HttpServerAdvanced::getPinData(byte digitalPinNumber)
   }
 
   return
+    "initialized: " +
+      String(settings.isPinInitalized(digitalPinNumber), DEC) +
+      "\r\n" +
     "state: " +
       String(pins.getState(digitalPinNumber), DEC) +
       "\r\n" +
     "mode: " +
       String(settings.getPinMode(digitalPinNumber), DEC) +
+      "\r\n" +
+    "locked: " +
+      String(settings.isPinLocked(digitalPinNumber), DEC) +
       "\r\n";
 }

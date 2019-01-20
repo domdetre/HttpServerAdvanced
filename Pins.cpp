@@ -43,13 +43,17 @@ byte Pins::digital2gpio(byte digitalPinNumber)
       return D15;
   }
 
-  debug->error("Pin is out of range. Range: 0-15");
+  debug->error("Pin is out of range.");
+
   return 255;
 }
 
 byte Pins::getState(byte digitalPinNumber)
 {
-  debug->info("Getting the state of pin: " + String(digitalPinNumber));
+  debug->info(
+    "Getting the state of pin: " +
+    String(digitalPinNumber)
+  );
 
   byte pinState = 0;
   byte gpioNumber = digital2gpio(digitalPinNumber);
@@ -57,37 +61,61 @@ byte Pins::getState(byte digitalPinNumber)
     return 255;
   }
 
-  debug->info("GPIO pin number: " + String(gpioNumber));
+  debug->info(
+    "GPIO pin number: " +
+    String(gpioNumber)
+  );
 
   // if the pin is input mode, read the value of it
   if (isInput(digitalPinNumber)) {
     pinState = digitalRead(gpioNumber);
-    debug->info("Pin is in input mode, read state: " + String(pinState));
+    debug->info(
+      "Pin is in input mode, read state: " +
+      String(pinState)
+    );
     return pinState;
   }
 
   // otherwise return the stored value
   pinState = settings->getPinState(digitalPinNumber);
-  debug->info("Pin is in output mode, stored state: " + String(pinState));
+  debug->info(
+    "Pin is in output mode, stored state: " +
+    String(pinState)
+  );
   return pinState;
 }
 
 bool Pins::setState(byte digitalPinNumber, String strPinState)
 {
-  debug->info("Setting pin state of " + String(digitalPinNumber) + " to " + strPinState);
+  debug->info(
+    "Setting pin state of " +
+    String(digitalPinNumber) +
+    " to " + strPinState
+  );
+
+  if (!isOutput(digitalPinNumber)) {
+    debug->error(
+      "The pin is not in output mode!"
+    );
+    return false;
+  }
+
+  if (!settings->isPinLocked(digitalPinNumber)) {
+    debug->error(
+      "The pin is locked!"
+    );
+    return false;
+  }
 
   byte gpioNumber = digital2gpio(digitalPinNumber);
   if (gpioNumber == 255) {
     return false;
   }
 
-  debug->info("GPIO pin number: " + String(gpioNumber));
-
-  // if the pin is in input mode, bail
-  if (isInput(digitalPinNumber)) {
-    debug->warn("The pin is in input mode!");
-    return false;
-  }
+  debug->info(
+    "GPIO pin number: " +
+    String(gpioNumber)
+  );
 
   int state = -1;
   if (strPinState == "0" || strPinState == "low") {
@@ -112,15 +140,14 @@ bool Pins::setState(byte digitalPinNumber, String strPinState)
 
 bool Pins::initPin(byte digitalPinNumber, String strPinMode)
 {
-  debug->info("Initializing pin " + String(digitalPinNumber) + " with mode " + strPinMode);
-
-  if (settings->isPinInitalized(digitalPinNumber)) {
-    debug->error("Pin is already initialized");
-    return false;
-  }
+  debug->info(
+    "Initializing pin " +
+    String(digitalPinNumber) +
+    " with mode " + strPinMode
+  );
 
   if (settings->isPinLocked(digitalPinNumber)) {
-    debug->error("Pin is locked");
+    debug->error("Pin is locked!");
     return false;
   }
 
@@ -129,7 +156,10 @@ bool Pins::initPin(byte digitalPinNumber, String strPinMode)
     return false;
   }
 
-  debug->info("GPIO pin number: " + String(gpioNumber));
+  debug->info(
+    "GPIO pin number: " +
+    String(gpioNumber)
+  );
 
   int mode = -1;
   if (strPinMode == "input") {
@@ -142,14 +172,17 @@ bool Pins::initPin(byte digitalPinNumber, String strPinMode)
     mode = INPUT_PULLUP;
   }
   else {
-    debug->error("Requested pin mode is invalid! Only input, output, input_pullup are accepted.");
+    debug->error("Pin mode is invalid!");
     return false;
   }
 
   pinMode(gpioNumber, mode);
   settings->setPinInit(digitalPinNumber);
   settings->storePinMode(digitalPinNumber, mode);
-  debug->info("Pin initialized with mode " + String(mode));
+  debug->info(
+    "Pin initialized with mode " +
+    String(mode)
+  );
   return true;
 }
 

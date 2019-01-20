@@ -15,12 +15,14 @@ class HttpResponse
 
     HttpResponse(int code, String status);
     HttpResponse(String data);
+    HttpResponse(int code, String status, String data);
     HttpResponse();
     String toString();
 
-    static HttpResponse BadRequest();
-    static HttpResponse NotFound();
-    static HttpResponse Unacceptable();
+    static HttpResponse BadRequest(String data = "");
+    static HttpResponse NotFound(String data = "");
+    static HttpResponse Unacceptable(String data = "");
+    static HttpResponse InternalError(String data = "");
 };
 
 #endif
