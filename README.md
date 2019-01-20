@@ -92,6 +92,41 @@
 - INPUT 0 OUTPUT 1 INPUT_PULLUP 2
 
 
+| Digital | GPIO |          |             |
+|:-------:|:----:|:--------:|:-----------:|
+|   D0    |  16  |   User   |    Wake     |
+|   D1    |  5   |          |             |
+|   D2    |  4   |          |             |
+|   D3    |  0   |  Flash   |             |
+|   D4    |  2   |   TXD1   | LED_BUILTIN |
+|         |      |   3V3    |             |
+|         |      |   GND    |             |
+|   D5    |  14  |  HSCLK   |             |
+|   D6    |  12  |  HMISO   |             |
+|   D7    |  13  |  HMOSI   |    RXD2     |
+|   D8    |  15  |   HCS    |    TXD2     |
+|         |  3   |    RX    |             |
+|         |  1   |    TX    |             |
+|         |      |   GND    |             |
+|         |      |   3V3    |             |
+|         |      |          |             |
+|   A0    |      |   TOUT   |             |
+|         |      | Reserved |             |
+|         |      | Reserved |             |
+|         |  10  |   SDD3   |             |
+|         |  9   |   SDD2   |             |
+|         |      |   SDD1   |             |
+|         |      |  SDCMD   |             |
+|         |      |   SDD0   |             |
+|         |      |  SDCLK   |             |
+|         |      |   GND    |             |
+|         |      |   3v3    |             |
+|         |      |  Enable  |             |
+|         |      |  Reset   |             |
+|         |      |   GND    |             |
+|         |      |   VIN    |             |
+
+
 ## Compile size results
 
 - Wemos D1 R1  
