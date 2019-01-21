@@ -9,38 +9,60 @@ void Pins::setup(Settings* settings, Debug* debug)
 byte Pins::digital2gpio(byte digitalPinNumber)
 {
   switch (digitalPinNumber) {
-    case 0:
-      return D0;
-    case 1:
-      return D1;
-    case 2:
-      return D2;
-    case 3:
-      return D3;
-    case 4:
-      return D4;
-    case 5:
-      return D5;
-    case 6:
-      return D6;
-    case 7:
-      return D7;
-    case 8:
-      return D8;
-    case 9:
-      return D9;
-    case 10:
-      return D10;
-    case 11:
-      return D11;
-    case 12:
-      return D12;
-    case 13:
-      return D13;
-    case 14:
-      return D14;
-    case 15:
-      return D15;
+    #if \
+      defined(ARDUINO_ESP8266_WEMOS_D1MINI) || \
+      defined(ARDUINO_ESP8266_WEMOS_D1MINIPRO) || \
+      defined(ARDUINO_ESP8266_WEMOS_D1MINIPRO) || \
+      defined(ARDUINO_ESP8266_WEMOS_D1R1) || \
+      defined(ARDUINO_ESP8266_NODEMCU)
+
+        case 0:
+          return D0;
+        case 1:
+          return D1;
+        case 2:
+          return D2;
+        case 3:
+          return D3;
+        case 4:
+          return D4;
+        case 5:
+          return D5;
+        case 6:
+          return D6;
+        case 7:
+          return D7;
+        case 8:
+          return D8;
+
+    #endif
+
+    #if \
+      defined(ARDUINO_ESP8266_WEMOS_D1R1) || \
+      defined(ARDUINO_ESP8266_NODEMCU)
+
+        case 9:
+          return D9;
+        case 10:
+          return D10;
+
+    #endif
+
+    #if \
+      defined(ARDUINO_ESP8266_WEMOS_D1R1)
+
+        case 11:
+          return D11;
+        case 12:
+          return D12;
+        case 13:
+          return D13;
+        case 14:
+          return D14;
+        case 15:
+          return D15;
+
+    #endif
   }
 
   debug->error("Pin is out of range.");

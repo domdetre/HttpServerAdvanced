@@ -1,6 +1,16 @@
 #ifndef HTTP_SERVER_ADVANCED_H
 #define HTTP_SERVER_ADVANCED_H
 
+// check for the supported boards
+#if \
+  !defined(ARDUINO_ESP8266_WEMOS_D1MINI) && \
+  !defined(ARDUINO_ESP8266_WEMOS_D1MINIPRO) && \
+  !defined(ARDUINO_ESP8266_WEMOS_D1MINIPRO) && \
+  !defined(ARDUINO_ESP8266_WEMOS_D1R1) && \
+  !defined(ARDUINO_ESP8266_NODEMCU)
+    #error Unsupported board!
+#endif
+
 #include <ESP8266WiFi.h>
 #include <Arduino.h>
 
