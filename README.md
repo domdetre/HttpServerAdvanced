@@ -129,6 +129,6 @@
 
 ## Compile size results
 
-- Wemos D1 R1  
-  Sketch uses 272100 bytes (26%) of program storage space. Maximum is 1044464 bytes.  
-  Global variables use 30520 bytes (37%) of dynamic memory, leaving 51400 bytes for local variables. Maximum is 81920 bytes.  
+- Wemos/Lolin D1 R2 & mini  
+  Sketch uses 272584 bytes (26%) of program storage space. Maximum is 1044464 bytes.  
+  Global variables use 30500 bytes (37%) of dynamic memory, leaving 51420 bytes for local variables. Maximum is 81920 bytes.  
