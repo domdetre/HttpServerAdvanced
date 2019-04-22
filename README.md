@@ -3,23 +3,48 @@
 - Provides API to gateway the HTTP request data to and from the serial
 - Provides API to initialize, read and write digital and analog pins.
 
+---
 
 ## Endpoints
 
+---
 
 ### /serial
 
-- GET /serial  
-  - If there's data waiting on the serial, reads it and returns in the HTTP response
+#### `GET /serial`
+If there's data waiting on the serial, reads it and returns in the HTTP response
+
+##### Examples
+`curl -i -X GET http://92c1c372.domdetre.com/serial`
 
 
-- POST /serial --data {data}  
-  - Sends the data to the serial and returns without waiting.
+#### `POST /serial --data {data}`
+Sends the data to the serial and returns without waiting.
 
+##### Examples
+`curl -i -X POST --data something http://92c1c372.domdetre.com/serial`
+
+---
 
 ### /digital
 
-- GET /digital/{pinNumber}  
+
+####  `PUT /digital/{pinNumber} --data (output|input|input_pullup)`
+Initializes the digital pin {pinNumber} to either as Output or Input pin.
+
+##### Examples
+`curl -i -X PUT --data output http://92c1c372.domdetre.com/digital/1`
+
+##### Notes
+- Must be called before POSTing to any or GETting from any digital endpoint
+
+
+#### `GET /digital/{pinNumber}`
+
+##### Examples
+`curl -i -X GET http://92c1c372.domdetre.com/digital/1`
+
+##### Notes
   - If the pin is not initialized, will return error.
   - If the pin is initialized as input, will read the state of the pin.
   - If the pin is initialized as output, will return the stored state of the pin.
@@ -27,59 +52,27 @@
   - Supports up to 15 digital pins.
 
 
-- POST /digital/{pinNumber}  --data {0|1|low|high}
-  - If the pin is not initialized, will return error.
+#### `POST /digital/{pinNumber}  --data (0|1|low|high)`
+Sets the output of the digital pin.
+
+##### Examples
+`curl -i -X POST --data high http://92c1c372.domdetre.com/digital/1`
+
+##### Notes
+  - If the pin is not initialized, will return error. You need to PUT the digital endpoint to a mode.
   - If the pin is initialized as input, will return error.  
   - If the pin is initialized as output, then sets the state.  
 
 
-- PUT /digital/{pinNumber} --data {output|input}  
-  - Initializes the digital pin {pinNumber} to either as Output or Input pin.
+####  `DELETE /digital/{pinNumber}`
+Reverts the effect of PUTting the pin into a mode. Unsets the pin mode to allow it to be reinitialized.
 
+##### Examples
+`curl -i -X DELETE http://92c1c372.domdetre.com/digital/1`
 
-### /analog
+##### Notes
 
-- GET /analog/{pinNumber}  
-  - Reads the value from the analog pin {pinNumber}. The pin number can be either numeric or the usual format A#.  
-  @see https://www.arduino.cc/reference/en/language/functions/analog-io/analogread/  
-
-
-- PUT /analog/{pinNumber} --data {value}  
-  - This is an endpoint for analogWrite function. The pinNumber is the digital pin and the value is the duty cycle.  
-  @see https://www.arduino.cc/reference/en/language/functions/analog-io/analogwrite/  
-
-
-### Sensors
-
-- PUT /dht11 --data {digitalPinNumber}  
-
-- PUT /hc-sr04 --data "echo:{digitalPinNumber} trig:{digitalPinNumber}"  
-
-- PUT /debug --data {true|false}  
-  Turns on or off debugging on serial. Note that any attached devices will get the debug data.  
-
-
-## TODOs
-
-- get analog
-- put analog
-- put dht11
-- put hc-sr04
-- put debug
-- software serial option for the output
-- option to disable serial relay
-- options to add custom endpoints
-- option to have multiple relay client
-- endpoint to get the available endpoints
-- endpoint for getting help
-- endpoint to get system informations
-
-
-## Puzzles
-
-- should we allow pins to be reinitialized?
-  - Pin modes are stored in the eeprom, in case the device reboot and restores mode on reboot, meaning we should
-
+---
 
 ## ESP8266
 
