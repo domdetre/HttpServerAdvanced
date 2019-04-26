@@ -1,7 +1,12 @@
 # Advanced Wifi Http Server
 
+A Library for ESP8266 devices (and Arduinos in the future) that provides an advanced REST API to control the modules. The main goal is to have a library which can be easily flashed on any ESP8266 devie and then those can be controlled without writing any extra or specialized code.
+The reason it is not using MQTT is that this way those IoT modules can be used standalone without need to setup broker server. With this approach all you need is a terminal and curl to control your device (after flashing iwth the library).
+
 - Provides API to gateway the HTTP request data to and from the serial
 - Provides API to initialize, read and write digital and analog pins.
+
+An example ino file can be found at `docs/examples/arduino.ino`
 
 ---
 
