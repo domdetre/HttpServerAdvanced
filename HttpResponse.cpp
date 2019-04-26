@@ -28,6 +28,7 @@ String HttpResponse::toString()
     protocol + " " + String(code) + " " + 
     status + "\r\n" +
     "Content-Type: " + contentType + "\r\n" +
+    "Access-Control-Allow-Origin: *\r\n" +
     "HSA-Version: " + String(HTTP_SERVER_ADVANCED_VERSION) + "\r\n" +
     "\r\n" + data + "\r\n";
 }
