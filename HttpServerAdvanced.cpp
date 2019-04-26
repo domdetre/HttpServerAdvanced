@@ -27,7 +27,7 @@ void HttpServerAdvanced::setup()
     delay(500);
   }
 
-  debug.info("Version " + String(HTTP_SERVER_ADVANCED_VERSION));
+  //debug.info("Version " + String(HTTP_SERVER_ADVANCED_VERSION));
 
   delay(10);
 
@@ -42,6 +42,7 @@ void HttpServerAdvanced::setup()
 
   debug.info("Connecting to " + String(ssid));
 
+  WiFi.hostname("DomNode");
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, sskey);
 

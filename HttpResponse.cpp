@@ -24,8 +24,12 @@ HttpResponse::HttpResponse()
 
 String HttpResponse::toString()
 {
-  return protocol + " " + String(code) + " " + status + "\r\n" +
-    "Content-Type: " + contentType +  "\r\n\r\n" + data + "\r\n";
+  return 
+    protocol + " " + String(code) + " " + 
+    status + "\r\n" +
+    "Content-Type: " + contentType + "\r\n" +
+    "HSA-Version: " + String(HTTP_SERVER_ADVANCED_VERSION) + "\r\n" +
+    "\r\n" + data + "\r\n";
 }
 
 HttpResponse HttpResponse::BadRequest(String data)
