@@ -27,7 +27,7 @@ void HttpServerAdvanced::setup()
     delay(500);
   }
 
-  //debug.info("Version " + String(HTTP_SERVER_ADVANCED_VERSION));
+  debug.info("Version " + String(HTTP_SERVER_ADVANCED_VERSION));
 
   delay(10);
 
@@ -94,7 +94,9 @@ void HttpServerAdvanced::loop()
 void HttpServerAdvanced::waitForClient(WiFiClient* client)
 {
   debug.info("Waiting for the client to send data");
-
+  unsigned long startTime = millis();
+  int timeOutMillis = 30 * 1000;
+  unsigned long timeOutTime = startTime + timeOutMillis;
   int counter = 0;
   while (!client->available()) {
     delay(1);
@@ -108,6 +110,12 @@ void HttpServerAdvanced::waitForClient(WiFiClient* client)
       statusLed.turnOn();
       counter = 0;
       debug.waiting();
+    }
+
+    if (timeOutTime < millis()) {
+      debug.waitingFinished();
+      debug.warn("No data received within the timeout period.");
+      return;
     }
   }
 
@@ -123,6 +131,14 @@ HttpResponse HttpServerAdvanced::processRequest(HttpRequest* request)
   debug.info("request protocol: " + request->protocol);
   debug.info("request headers: " + request->headers);
   debug.info("request data: " + request->data);
+
+  if (request->method == "options") {
+    return HttpResponse();
+  }
+
+  if (request->uri == "/") {
+    return HttpResponse();
+  }
 
   //serial
   if (request->uri == "/serial") {
