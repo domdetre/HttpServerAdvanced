@@ -42,7 +42,14 @@ void HttpServerAdvanced::setup()
 
   debug.info("Connecting to " + String(ssid));
 
-  WiFi.hostname("DomNode");
+  String nodeName = settings.getNodeName();
+  if (nodeName.length() == 0) {
+    settings.setNodeName("DomNode");
+  }
+
+  nodeName = settings.getNodeName();
+  debug.info("nodeName: " + nodeName);
+
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, sskey);
 
@@ -137,7 +144,19 @@ HttpResponse HttpServerAdvanced::processRequest(HttpRequest* request)
   }
 
   if (request->uri == "/") {
-    return HttpResponse();
+    if (request->method == "get") {
+      return HttpResponse(
+        "name: " + settings.getNodeName() + "\r\n" +
+        "hsaVersion: " + String(HTTP_SERVER_ADVANCED_VERSION) + "\r\n"
+      );
+    }
+
+    if (request->method == "post") {
+      settings.setNodeName(request->data);
+      return HttpResponse();
+    }
+
+    return HttpResponse::BadRequest();
   }
 
   //serial
@@ -257,6 +276,24 @@ HttpResponse HttpServerAdvanced::processRequestOfDigital(HttpRequest* request)
       getPinData(pinNumber)
     );
   }
+
+  // // PATCH
+  // if (request->method == "patch") {
+  //   if (settings.getPinMode(pinNumber) != OUTPUT) {
+  //     return HttpResponse::Unacceptable(
+  //       "The pin is not in output mode, can't set state.\r\n" +
+  //       getPinData(pinNumber)
+  //     );
+  //   }
+
+  //   if (!pins.setState(pinNumber, request->data)) {
+  //     return HttpResponse::InternalError();
+  //   }
+
+  //   return HttpResponse(
+  //     getPinData(pinNumber)
+  //   );
+  // }
 
   // DELETE
   if (request->method == "delete") {
