@@ -155,3 +155,35 @@ void Settings::writeEeprom(byte eepromIndex, byte* byteSet)
     EEPROM.commit();
   }
 }
+
+void Settings::setNodeName(String name)
+{
+  nodeName = name;
+
+  for(int index = 0; index < 30; index++) {
+    if (name.length() == index) {
+      EEPROM.write(EEPROM_INDEX_NODENAME + index, 0);
+    }
+    else {
+      EEPROM.write(EEPROM_INDEX_NODENAME + index, (byte)name[index]);
+    }
+  }
+
+  EEPROM.commit();
+}
+
+String Settings::getNodeName()
+{
+  nodeName = "";
+  for(int index = 0; index < 30; index++) {
+    char character = (char)EEPROM.read(EEPROM_INDEX_NODENAME + index);
+
+    if (character <= 0) {
+      break;
+    }
+
+    nodeName += character;
+  }
+
+  return nodeName;
+}

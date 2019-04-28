@@ -6,12 +6,13 @@
 #include <EEPROM.h>
 
 #define EEPROM_ID 112
-#define EEPROM_LENGTH 128
 #define EEPROM_INDEX_PINMODES 3
 #define EEPROM_INDEX_PINPULLUPS 5
 #define EEPROM_INDEX_PINSTATES 7
 #define EEPROM_INDEX_PININITS 9
 #define EEPROM_INDEX_PINLOCKS 11
+#define EEPROM_INDEX_NODENAME 13
+#define EEPROM_LENGTH 44
 
 class Settings
 {
@@ -21,6 +22,8 @@ class Settings
     byte pinPullups[2] = {0,0};
     byte pinInits[2] = {0,0};
     byte pinLocks[2] = {0,0};
+
+    String nodeName = "";
 
     bool eepromEnabled = true;
     bool dataRestored = false;
@@ -54,6 +57,9 @@ class Settings
     void unsetPinInit(byte pinNumber);
 
     void writeEeprom(byte eepromIndex, byte* byteSet);
+
+    void setNodeName(String name);
+    String getNodeName();
 };
 
 #endif
