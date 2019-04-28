@@ -24,18 +24,19 @@ void HttpRequest::readClient(WiFiClient* client)
 
   statusLed->turnOn();
 
-  request.toLowerCase();
-
   int delimIndex = request.indexOf(' ');
   method = request.substring(0, delimIndex);
+  method.toLowerCase();
   request.remove(0, delimIndex + 1);
 
   delimIndex = request.indexOf(' ');
   uri = request.substring(0, delimIndex);
+  uri.toLowerCase();
   request.remove(0, delimIndex + 1);
 
   delimIndex = request.indexOf('\n');
   protocol = request.substring(0, delimIndex);
+  protocol.toLowerCase();
   request.remove(0, delimIndex + 1);
 
   delimIndex = request.indexOf("\r\n\r\n");
