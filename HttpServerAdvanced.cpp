@@ -2,23 +2,51 @@
 
 HttpServerAdvanced::HttpServerAdvanced(const char* ssid, const char* sskey, int port, int ledPinNumber)
 {
-  init(ssid, sskey, port, ledPinNumber);
+  if (ssid) {
+    addAccessPoint(ssid, sskey);
+  }
+
+  if (port > 0) {
+    setServerPort(port);
+  }
+
+  if (ledPinNumber >= 0) {
+    setStatusLedPin(ledPinNumber);
+  }
 }
 
-void HttpServerAdvanced::init(const char* ssid, const char* sskey, int port, int ledPinNumber)
+void HttpServerAdvanced::setStatusLedPin(byte ledpin)
 {
-  this->ssid = ssid;
-  this->sskey = sskey;
+  statusLed.ledPinNumber = ledpin;
+}
+
+void HttpServerAdvanced::setServerPort(int port)
+{
   this->port = port;
-  this->statusLed.ledPinNumber = ledPinNumber;
-
-  this->server = new WiFiServer(port);
 }
 
-void HttpServerAdvanced::setup(const char* ssid, const char* sskey, int port, int ledPinNumber)
+bool HttpServerAdvanced::addAccessPoint(String ssid, String psk, byte priority)
 {
-  init(ssid, sskey, port, ledPinNumber);
-  setup();
+  if (ssid.length() > 32 || psk.length() > 64) {
+    debug.error("Too long ssid or psk!");
+    return false;
+  }
+
+  AccessPoint accessPoint;
+  accessPoint.priority = priority;
+  ssid.toCharArray(accessPoint.ssid, 32);
+  psk.toCharArray(accessPoint.psk, 64);
+
+  AccessPoint* accessPointListNew = new AccessPoint[accessPointCounter + 1];
+  for (size_t accessPointIndex = 0; accessPointIndex < accessPointCounter; accessPointIndex++) {
+    accessPointListNew[accessPointIndex] = accessPointList[accessPointIndex];
+  }
+
+  accessPointListNew[accessPointCounter] = accessPoint;
+
+  delete accessPointList;
+  accessPointList = accessPointListNew;
+  accessPointCounter++;
 }
 
 void HttpServerAdvanced::setup()
@@ -40,7 +68,78 @@ void HttpServerAdvanced::setup()
     pins.restorePinModesAndStates();
   }
 
-  debug.info("Connecting to " + String(ssid));
+  if (!setupWifi()) {
+    debug.error("Setup incomplete.");
+    statusLed.turnOff();
+    return;
+  }
+
+  server = new WiFiServer(port);
+  server->begin();
+
+  setupComplete = true;
+  debug.info("Setup complete.");
+}
+
+bool HttpServerAdvanced::setupWifi()
+{
+  int numberOfNetworks = WiFi.scanNetworks();
+  if (numberOfNetworks == 0) {
+    debug.error("No networks found!");
+    return false;
+  }
+
+  for (int scanIndex = 0; scanIndex < numberOfNetworks; scanIndex++) {
+    debug.info(
+      "Found AP: '" + WiFi.SSID(scanIndex) + "' rssi: " + WiFi.RSSI(scanIndex)
+    );
+
+    for (size_t accessPointIndex = 0; accessPointIndex < accessPointCounter; accessPointIndex++) {
+      if (
+        String(
+          accessPointList[accessPointIndex].ssid
+        ).compareTo(
+          WiFi.SSID(scanIndex)
+        ) == 0
+      ) {
+        accessPointList[accessPointIndex].found = true;
+
+        // same ssid can be used by multiple APs, and we wan't to store the strongest signal
+        int rssi = WiFi.RSSI(scanIndex);
+        if (rssi > accessPointList[accessPointIndex].signalStrength) {
+          accessPointList[accessPointIndex].signalStrength = rssi;
+        }
+      }
+    }
+  }
+
+  AccessPoint selectedAccessPoint;
+  for (size_t accessPointIndex = 0; accessPointIndex < accessPointCounter; accessPointIndex++) {
+    // If the stored network cannot be found, drop it.
+    if (!accessPointList[accessPointIndex].found) {
+      continue;
+    }
+
+    // If the priority is higher than the selected one's, use that.
+    if (accessPointList[accessPointIndex].priority < selectedAccessPoint.priority) {
+      selectedAccessPoint = accessPointList[accessPointIndex];
+    }
+
+    // If the priority is the same, but the signalStrength is stronger than the selected one's, use that.
+    if (
+      accessPointList[accessPointIndex].priority == selectedAccessPoint.priority &&
+      accessPointList[accessPointIndex].signalStrength > selectedAccessPoint.signalStrength
+    ) {
+      selectedAccessPoint = accessPointList[accessPointIndex];
+    }
+  }
+
+  if (!selectedAccessPoint.found) {
+    debug.error("None of the stored networks are visible!");
+    return false;
+  }
+
+  debug.info("Connecting to " + String(selectedAccessPoint.ssid));
 
   String nodeName = settings.getNodeName();
   if (nodeName.length() == 0) {
@@ -51,32 +150,28 @@ void HttpServerAdvanced::setup()
   debug.info("nodeName: " + nodeName);
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, sskey);
+  WiFi.begin(selectedAccessPoint.ssid, selectedAccessPoint.psk);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(250);
-
     statusLed.turnOff();
-
     delay(250);
-
     statusLed.turnOn();
-
     debug.waiting();
   }
 
   debug.waitingFinished();
-  debug.info("WiFi connected.");
-
-  server->begin();
-
-  debug.info("Server started, local IP: " + WiFi.localIP().toString());
-
-  debug.info("Setup complete.");
+  debug.info("WiFi connected, local IP: " + WiFi.localIP().toString());
+  return true;
 }
 
 void HttpServerAdvanced::loop()
 {
+  if (!setupComplete) {
+    statusLed.turnOff();
+    return;
+  }
+
   // Check if we have a new client
   WiFiClient client = server->available();
   if (!client) {

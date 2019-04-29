@@ -23,11 +23,17 @@
 #include "Debug.h"
 #include "Pins.h"
 
+struct AccessPoint {
+  char ssid[32];
+  char psk[64];
+  byte priority = 255;
+  int signalStrength = -1000;
+  bool found = false;
+};
+
 class HttpServerAdvanced
 {
   public:
-    const char* ssid;
-    const char* sskey;
     int port = 80;
     WiFiServer* server;
     StatusLed statusLed;
@@ -35,17 +41,63 @@ class HttpServerAdvanced
     Debug debug;
     Pins pins;
 
-    HttpServerAdvanced(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
+    AccessPoint* accessPointList;
+    int accessPointCounter = 0;
 
-    void init(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
+    bool setupComplete = false;
 
-    void setup(const char* ssid, const char* sskey, int port = 80, int ledPinNumber = -1);
+    HttpServerAdvanced(const char* ssid = nullptr, const char* sskey = nullptr, int port = 80, int ledPinNumber = LED_BUILTIN);
 
+    /**
+     * Adds a new accessPoint to the existing list of access points.
+     * @param  String   ssid     SSID of the AP.
+     * @param  String   psk      WPA-PSK for the AP.
+     * @param  byte     priority The lower the number, higher the priority. Range is 0 to 255, default value is 0.
+     * @return bool              False on error.
+     */
+    bool addAccessPoint(String ssid, String psk, byte priority = 255);
+
+    /**
+     * Sets up the pin to be used as status indicator.
+     * @param ledpin GPIO pin number
+     */
+    void setStatusLedPin(byte ledpin);
+
+    /**
+     * Sets the port of the webserver.
+     * @param port
+     */
+    void setServerPort(int port);
+
+    /**
+     * Disaples reading and writing the eeprom.
+     */
+    void disableEeprom();
+
+    /**
+     * Sets up the Advanced Http Server
+     */
     void setup();
 
+    /**
+     * Scans for the available wifi networks, gets their signal
+     * strength, and selects the one with highest priority and highest
+     * signal strength.
+     * Priority has higher precedence than signal strength.
+     */
+    bool setupWifi();
+
+    /**
+     * The loop;
+     */
     void loop();
 
+    /**
+     * Waits for the http client to send the request data
+     * @param client WiFiClient
+     */
     void waitForClient(WiFiClient* client);
+
     /**
      * Processes the request and returns accodringly
      * If the endpoint cannot be found, returns 404
@@ -66,8 +118,6 @@ class HttpServerAdvanced
     void writeSerial(String data);
 
     String getPinData(byte digitalPinNumber);
-
-    void disableEeprom();
 
     /**
      * Enables logging either on serial or on the http interface.
