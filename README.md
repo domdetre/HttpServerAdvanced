@@ -128,5 +128,5 @@ Reverts the effect of PUTting the pin into a mode. Unsets the pin mode to allow 
 ## Compile size results
 
 - Wemos/Lolin D1 R2 & mini  
-  Sketch uses 272584 bytes (26%) of program storage space. Maximum is 1044464 bytes.  
-  Global variables use 30500 bytes (37%) of dynamic memory, leaving 51420 bytes for local variables. Maximum is 81920 bytes.  
+  Sketch uses 275620 bytes (26%) of program storage space. Maximum is 1044464 bytes.
+  Global variables use 30936 bytes (37%) of dynamic memory, leaving 50984 bytes for local variables. Maximum is 81920 bytes. 
